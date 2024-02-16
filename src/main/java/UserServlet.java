@@ -15,19 +15,15 @@ public class UserServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
-        if (pathInfo == null || pathInfo.equals("/")) {
+        int id = ContextPathUtil.getIdFromPathInfo(pathInfo);
+        if (id == -1) {
             resp.getWriter().println(objectMapper.writeValueAsString(userService.getAllUsers()));
         } else {
-            try {
-                int id = Integer.parseInt(pathInfo.substring(1));
-                User user = userService.getUserById(id);
-                if (user != null) {
-                    resp.getWriter().println(objectMapper.writeValueAsString(user));
-                } else {
-                    resp.getWriter().println("User not found");
-                }
-            } catch (NumberFormatException e) {
-                resp.getWriter().println("Invalid user ID");
+            User user = userService.getUserById(id);
+            if (user != null) {
+                resp.getWriter().println(objectMapper.writeValueAsString(user));
+            } else {
+                resp.getWriter().println("User not found");
             }
         }
     }
@@ -47,51 +43,32 @@ public class UserServlet extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
-        if (pathInfo != null && !pathInfo.equals("/")) {
-            try {
-                int id = Integer.parseInt(pathInfo.substring(1));
-                User existingUser = userService.getUserById(id);
+        int id = ContextPathUtil.getIdFromPathInfo(pathInfo);
 
-                if (existingUser != null) {
-                    User updatedUser = objectMapper.readValue(req.getInputStream(), User.class);
-
-                    existingUser.setName(updatedUser.getName());
-                    existingUser.setLastName(updatedUser.getLastName());
-                    existingUser.setAge(updatedUser.getAge());
-
-                    userService.updateUser(existingUser);
-                    resp.getWriter().println("User updated: " + objectMapper.writeValueAsString(existingUser));
-                } else {
-                    resp.getWriter().println("User not found");
-                }
-            } catch (JsonProcessingException e) {
-                resp.getWriter().println("Invalid JSON format");
-            } catch (NumberFormatException e) {
-                resp.getWriter().println("Invalid user ID");
-            }
+        User existingUser = userService.getUserById(id);
+        if (existingUser != null) {
+            User updatedUser = objectMapper.readValue(req.getInputStream(), User.class);
+            existingUser.setName(updatedUser.getName());
+            existingUser.setLastName(updatedUser.getLastName());
+            existingUser.setAge(updatedUser.getAge());
+            userService.updateUser(existingUser);
+            resp.getWriter().println("User updated: " + objectMapper.writeValueAsString(existingUser));
         } else {
-            resp.getWriter().println("Invalid request");
+            resp.getWriter().println("User not found");
         }
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
-        if (pathInfo != null && !pathInfo.equals("/")) {
-            try {
-                int id = Integer.parseInt(pathInfo.substring(1));
-                User user = userService.getUserById(id);
-                if (user != null) {
-                    userService.deleteUser(id);
-                    resp.getWriter().println("User deleted: " + objectMapper.writeValueAsString(user));
-                } else {
-                    resp.getWriter().println("User not found");
-                }
-            } catch (NumberFormatException e) {
-                resp.getWriter().println("Invalid user ID");
-            }
+        int id = ContextPathUtil.getIdFromPathInfo(pathInfo);
+
+        User user = userService.getUserById(id);
+        if (user != null) {
+            userService.deleteUser(id);
+            resp.getWriter().println("User deleted: " + objectMapper.writeValueAsString(user));
         } else {
-            resp.getWriter().println("Invalid request");
+            resp.getWriter().println("User not found");
         }
     }
 
